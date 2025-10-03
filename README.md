@@ -61,7 +61,8 @@ This project is a modern Tkinter-based GUI application that integrates two Huggi
 ```
 Assignment-3 Final/
 │
-├── main.py                          # Main application entry point (655 lines)
+├── main.py                          # Main application entry point (800+ lines)
+│                                    # Fully responsive GUI with modern design
 │
 ├── models/                          # AI model implementations
 │   ├── __init__.py
@@ -149,35 +150,66 @@ python main.py
 ## Features
 
 ### User Interface
-- **Modern Dark Theme**: Professional dark color scheme matching modern design standards
+- **Modern Dark Theme**: Professional dark color scheme with sleek design
 - **Custom UI Components**:
-  - Rounded buttons with hover effects
-  - Card-based layout for organized sections
-  - Custom-styled widgets
-- **Responsive Layout**: Grid-based layout adapts to window size
-- **Progress Indicators**: Progress bar shows operation status
+  - Rounded buttons with hover effects and icons (▶, 🗑, 📁)
+  - Card-based layout with beautiful separators
+  - Custom-styled widgets with highlighted borders
+  - Icon-enhanced labels for better UX
+- **Fully Responsive Layout**:
+  - Grid-based layout with proper weight distribution (50/50 split)
+  - Cards resize smoothly with window changes
+  - Minimum window size: 800x600
+  - All components scale proportionally
+- **Enhanced Visual Feedback**:
+  - Progress indicators with emoji icons (⚡, ✓)
+  - Color-coded status messages (green for success, yellow for warnings)
+  - Visual separators between sections
+  - Scrollable content areas where needed
 - **Real-time Updates**: Asynchronous operations keep UI responsive
 
 ### GUI Sections
-1. **Header**: Title, subtitle, model selection dropdown, and load button
-2. **User Input Panel** (Left):
-   - Text prompt input area
-   - Image file browser
-   - Model execution buttons
-3. **Model Output Panel** (Right):
-   - Image/video preview display
-   - Text output console
-   - Progress bar with status
-4. **Information Panels** (Bottom):
-   - Model Information: Shows current model details
-   - OOP Concepts: Lists all demonstrated concepts with line numbers
+1. **Header** (Fixed):
+   - Application title and subtitle
+   - Model selection dropdown
+   - Load model button with success indicator
+2. **User Input Panel** (Left, 50% height):
+   - Compact text prompt input (3 lines)
+   - Image file browser with icon
+   - Action buttons (▶ Run Model 1, ▶ Run Model 2, 🗑 Clear)
+   - Status labels with color feedback
+3. **Model Output Panel** (Right, 50% height):
+   - Large image/video preview area with border highlight
+   - Console output with syntax highlighting
+   - Real-time progress bar with emoji status
+4. **Information Panels** (Bottom, 50% height - ENLARGED):
+   - **Model Information** (📊):
+     - Displays loaded model details
+     - Parameters and specifications
+     - Scrollable content
+   - **OOP Concepts** (🎓):
+     - Complete concept breakdown with:
+       - 📍 Exact file locations and line numbers
+       - 💡 Implementation code snippets
+       - 📝 Brief explanations
+     - Scrollable for detailed information
 
 ### Technical Features
 - **Asynchronous Processing**: Threading prevents GUI freezing during model operations
+- **Fully Responsive Design**:
+  - Grid-based layout with weight configuration (2:2 ratio)
+  - Dynamic resizing of all components
+  - Window resize event handler
+  - Minimum size constraints (800x600)
 - **Error Handling**: Comprehensive error messages and validation
 - **Logging System**: Decorator-based logging for debugging
 - **Memory Optimization**: CPU-optimized models for broad compatibility
 - **File Management**: Automatic file saving and preview generation
+- **Enhanced UX**:
+  - Icon-based visual feedback (✓, ⚡, 📍, 💡, 📝)
+  - Truncated long filenames
+  - Color-coded status indicators
+  - Scrollable information panels
 - **Cross-platform**: Works on Windows, macOS, and Linux
 
 ## OOP Concepts Location Reference
@@ -306,10 +338,20 @@ All Python files are comprehensively commented with:
 ## Development Notes
 
 ### Code Quality:
-- **Total Lines**: ~1200+ lines of Python code
+- **Total Lines**: ~1400+ lines of Python code
 - **Comments**: Comprehensive documentation throughout
 - **Structure**: Modular, object-oriented design
 - **Standards**: Follows PEP 8 style guidelines
+- **UI/UX**: Modern, responsive design with accessibility features
+
+### Recent Enhancements:
+- ✅ Fully responsive grid-based layout
+- ✅ Enhanced OOP concepts panel with detailed locations
+- ✅ Icon-based visual system throughout
+- ✅ Optimized space allocation (50/50 split)
+- ✅ Compact text input, enlarged info panels
+- ✅ Scrollable content areas for better information display
+- ✅ Window resize handling for smooth scaling
 
 ### Extensibility:
 The application is designed to be easily extended:

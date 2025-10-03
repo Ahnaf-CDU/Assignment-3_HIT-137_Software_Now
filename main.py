@@ -190,15 +190,27 @@ class AIGUIApplication(tk.Tk, ModelManagerMixin):
         self._selected_image_path = None
         self._generated_image = None
 
+        # Track window size for responsive design
+        self._current_width = 1200
+        self._current_height = 800
+
         self._setup_window()
         self._setup_styles()
         self._create_widgets()
+
+        # Bind resize event for responsive layout
+        self.bind("<Configure>", self._on_window_resize)
 
     def _setup_window(self):
         """Private method - demonstrates encapsulation"""
         self.title(self._window_title)
         self.geometry(self._window_geometry)
         self.configure(bg=DarkTheme.BG_DARK)
+
+        # Set minimum window size for usability
+        self.minsize(800, 600)
+        # Allow window to be resizable
+        self.resizable(True, True)
 
         # Apply rounded corners on Windows 11
         try:
@@ -232,16 +244,28 @@ class AIGUIApplication(tk.Tk, ModelManagerMixin):
                        darkcolor=DarkTheme.PRIMARY)
 
     def _create_widgets(self):
-        """Create all GUI widgets"""
+        """
+        Create all GUI widgets with fully responsive layout
+
+        Uses grid layout with proper weight configuration for dynamic resizing
+        All cards and sections resize smoothly with window changes
+        """
         self._create_menu()
         self._create_header()
 
+        # Main container using grid for better control
         main_container = tk.Frame(self, bg=DarkTheme.BG_DARK)
-        main_container.pack(fill="both", expand=True, padx=20, pady=10)
+        main_container.pack(fill="both", expand=True)
+
+        # Configure grid weights for responsive resizing
+        main_container.grid_rowconfigure(0, weight=2, minsize=200)  # Input/Output row (reduced from 3 to 2)
+        main_container.grid_rowconfigure(1, weight=2, minsize=180)  # Info row (increased from 1 to 2)
+        main_container.grid_columnconfigure(0, weight=1, minsize=400)  # Left column
+        main_container.grid_columnconfigure(1, weight=1, minsize=400)  # Right column
 
         self._create_user_input_section(main_container)
         self._create_output_section(main_container)
-        self._create_info_section()
+        self._create_info_section(main_container)
 
     def _create_menu(self):
         """Create menu bar"""
@@ -306,141 +330,262 @@ class AIGUIApplication(tk.Tk, ModelManagerMixin):
         return card
 
     def _create_user_input_section(self, parent):
-        """Create input section"""
-        card = self._create_card(parent, "User Input")
-        card.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+        """
+        Create responsive user input section with auto-adjusting layout
 
+        The card automatically resizes with window and maintains usability
+        """
+        # Create card with proper grid positioning
+        card = self._create_card(parent, "User Input")
+        card.grid(row=0, column=0, sticky="nsew", padx=(20, 10), pady=20)
+
+        # Content frame that expands with card
         content = tk.Frame(card, bg=DarkTheme.BG_CARD)
         content.pack(fill="both", expand=True, padx=20, pady=15)
 
-        # Text input section
+        # === Text Input Section ===
         tk.Label(content, text="Enter Text Prompt for Video:",
                 font=("Segoe UI", 10, "bold"),
                 bg=DarkTheme.BG_CARD,
                 fg=DarkTheme.TEXT_PRIMARY).pack(anchor="w", pady=(0, 10))
 
-        self.text_input = scrolledtext.ScrolledText(content, height=4, width=40,
+        # Text input with smaller fixed height
+        self.text_input = scrolledtext.ScrolledText(content, height=3, width=1,
                                                    font=("Segoe UI", 10), relief="flat",
                                                    bg=DarkTheme.BG_HOVER, fg=DarkTheme.TEXT_PRIMARY,
                                                    insertbackground=DarkTheme.TEXT_PRIMARY,
-                                                   wrap=tk.WORD)
-        self.text_input.pack(fill="x", pady=(0, 15))
+                                                   wrap=tk.WORD, borderwidth=2,
+                                                   highlightthickness=1,
+                                                   highlightbackground=DarkTheme.BORDER,
+                                                   highlightcolor=DarkTheme.PRIMARY)
+        self.text_input.pack(fill="x", pady=(0, 15))  # Changed from fill="both", expand=True
         self.text_input.insert("1.0", "A beautiful sunset over the ocean with waves")
 
-        # Image input section for Model 2
+        # === Image Input Section ===
+        separator = tk.Frame(content, bg=DarkTheme.BORDER, height=1)
+        separator.pack(fill="x", pady=15)
+
         tk.Label(content, text="Or Select Input Image (for Model 2):",
                 font=("Segoe UI", 10, "bold"),
                 bg=DarkTheme.BG_CARD,
-                fg=DarkTheme.TEXT_PRIMARY).pack(anchor="w", pady=(15, 10))
+                fg=DarkTheme.TEXT_PRIMARY).pack(anchor="w", pady=(0, 10))
 
-        RoundedButton(content, text="Browse Image", command=self._browse_image,
-                     border_color=DarkTheme.PRIMARY, width=140, height=35).pack(pady=(0, 10))
+        RoundedButton(content, text="📁 Browse Image", command=self._browse_image,
+                     border_color=DarkTheme.PRIMARY, width=150, height=38).pack(pady=(0, 10))
 
-        self.image_path_label = tk.Label(content, text="", fg=DarkTheme.PRIMARY,
-                                        bg=DarkTheme.BG_CARD)
+        self.image_path_label = tk.Label(content, text="No image selected",
+                                        fg=DarkTheme.TEXT_SECONDARY,
+                                        bg=DarkTheme.BG_CARD,
+                                        font=("Segoe UI", 9, "italic"))
         self.image_path_label.pack()
 
+        # === Control Buttons ===
+        separator2 = tk.Frame(content, bg=DarkTheme.BORDER, height=1)
+        separator2.pack(fill="x", pady=15)
+
         btn_frame = tk.Frame(content, bg=DarkTheme.BG_CARD)
-        btn_frame.pack(pady=15)
+        btn_frame.pack(pady=(5, 10))
 
-        # Use rounded buttons matching mockup.png style
-        RoundedButton(btn_frame, text="Run Model 1",
+        # Buttons with icons and better styling
+        RoundedButton(btn_frame, text="▶ Run Model 1",
                      command=lambda: self._run_model(1),
-                     border_color=DarkTheme.PRIMARY).pack(side="left", padx=5)
+                     border_color=DarkTheme.PRIMARY, width=145).pack(side="left", padx=5)
 
-        RoundedButton(btn_frame, text="Run Model 2",
+        RoundedButton(btn_frame, text="▶ Run Model 2",
                      command=lambda: self._run_model(2),
-                     border_color=DarkTheme.WARNING).pack(side="left", padx=5)
+                     border_color=DarkTheme.SUCCESS, width=145).pack(side="left", padx=5)
 
-        RoundedButton(btn_frame, text="Clear",
+        RoundedButton(btn_frame, text="🗑 Clear",
                      command=self._clear_all,
-                     border_color=DarkTheme.TEXT_SECONDARY).pack(side="left", padx=5)
-
-        parent.grid_rowconfigure(0, weight=1)
-        parent.grid_columnconfigure(0, weight=1)
-        parent.grid_columnconfigure(1, weight=1)
+                     border_color=DarkTheme.WARNING, width=100).pack(side="left", padx=5)
 
     def _create_output_section(self, parent):
-        """Create output section"""
-        card = self._create_card(parent, "Model Output")
-        card.grid(row=0, column=1, sticky="nsew", padx=(10, 0))
+        """
+        Create responsive output section with dynamic content display
 
+        Output area resizes smoothly and maintains proper proportions
+        """
+        # Create card with proper grid positioning
+        card = self._create_card(parent, "Model Output")
+        card.grid(row=0, column=1, sticky="nsew", padx=(10, 20), pady=20)
+
+        # Content frame that expands with card
         content = tk.Frame(card, bg=DarkTheme.BG_CARD)
         content.pack(fill="both", expand=True, padx=20, pady=15)
 
-        img_frame = tk.Frame(content, bg="#3a3a3a", highlightbackground=DarkTheme.BORDER, highlightthickness=2)
-        img_frame.pack(fill="both", expand=True, pady=(0, 15))
+        # Configure content grid for responsive sections
+        content.grid_rowconfigure(0, weight=2, minsize=200)  # Image area
+        content.grid_rowconfigure(1, weight=1, minsize=100)  # Text output
+        content.grid_columnconfigure(0, weight=1)
 
-        self.image_display_label = tk.Label(img_frame, text="Video preview will appear here",
+        # === Image/Video Preview Area ===
+        img_container = tk.Frame(content, bg=DarkTheme.BG_CARD)
+        img_container.grid(row=0, column=0, sticky="nsew", pady=(0, 15))
+
+        img_frame = tk.Frame(img_container, bg="#3a3a3a",
+                           highlightbackground=DarkTheme.PRIMARY,
+                           highlightthickness=2)
+        img_frame.pack(fill="both", expand=True)
+
+        self.image_display_label = tk.Label(img_frame,
+                                           text="🎬 Video preview will appear here\n\nRun a model to see results",
                                            bg="#3a3a3a", fg=DarkTheme.TEXT_SECONDARY,
-                                           font=("Segoe UI", 11))
-        self.image_display_label.pack(expand=True, fill="both")
+                                           font=("Segoe UI", 11), justify="center")
+        self.image_display_label.pack(expand=True, fill="both", padx=20, pady=20)
 
-        # Text output label
-        tk.Label(content, text="Text Output:",
+        # === Text Output Section ===
+        output_container = tk.Frame(content, bg=DarkTheme.BG_CARD)
+        output_container.grid(row=1, column=0, sticky="nsew")
+
+        # Label with icon
+        tk.Label(output_container, text="📄 Console Output:",
                 font=("Segoe UI", 10, "bold"),
                 bg=DarkTheme.BG_CARD,
                 fg=DarkTheme.TEXT_PRIMARY).pack(anchor="w", pady=(0, 8))
 
-        self.output_display = scrolledtext.ScrolledText(content, height=6, width=50,
+        # Output text area with better styling
+        self.output_display = scrolledtext.ScrolledText(output_container, height=1, width=1,
                                                        font=("Consolas", 9), relief="flat",
-                                                       bg=DarkTheme.BG_CARD, fg=DarkTheme.TEXT_PRIMARY,
+                                                       bg=DarkTheme.BG_HOVER, fg=DarkTheme.TEXT_PRIMARY,
                                                        insertbackground=DarkTheme.TEXT_PRIMARY,
-                                                       wrap=tk.WORD)
-        self.output_display.pack(fill="both", pady=(0, 10))
+                                                       wrap=tk.WORD, borderwidth=2,
+                                                       highlightthickness=1,
+                                                       highlightbackground=DarkTheme.BORDER,
+                                                       highlightcolor=DarkTheme.PRIMARY)
+        self.output_display.pack(fill="both", expand=True, pady=(0, 12))
 
-        # Progress bar section
-        progress_frame = tk.Frame(content, bg=DarkTheme.BG_CARD)
+        # === Progress Bar Section ===
+        separator = tk.Frame(output_container, bg=DarkTheme.BORDER, height=1)
+        separator.pack(fill="x", pady=(0, 10))
+
+        progress_frame = tk.Frame(output_container, bg=DarkTheme.BG_CARD)
         progress_frame.pack(fill="x")
 
-        self.progress_label = tk.Label(progress_frame, text="Ready",
-                                       font=("Segoe UI", 9),
+        self.progress_label = tk.Label(progress_frame, text="⚡ Ready to generate",
+                                       font=("Segoe UI", 9, "bold"),
                                        bg=DarkTheme.BG_CARD,
-                                       fg=DarkTheme.TEXT_SECONDARY)
-        self.progress_label.pack(anchor="w", pady=(0, 5))
+                                       fg=DarkTheme.SUCCESS)
+        self.progress_label.pack(anchor="w", pady=(0, 6))
 
         self.progress_bar = ttk.Progressbar(progress_frame, mode='determinate',
                                            length=300, maximum=100)
         self.progress_bar.pack(fill="x")
 
-    def _create_info_section(self):
-        """Create info section"""
-        container = tk.Frame(self, bg=DarkTheme.BG_DARK)
-        container.pack(fill="both", padx=20, pady=(0, 20))
+    def _bind_mousewheel(self, canvas):
+        """
+        Bind mousewheel scrolling to canvas
 
-        left_card = self._create_card(container, "Model Information")
-        left_card.pack(side="left", fill="both", expand=True, padx=(0, 10))
+        Args:
+            canvas: The canvas widget to enable scrolling on
+        """
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
-        right_card = self._create_card(container, "OOP Concepts")
-        right_card.pack(side="left", fill="both", expand=True, padx=(10, 0))
+        def _bind_to_mousewheel(event):
+            canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
+        def _unbind_from_mousewheel(event):
+            canvas.unbind_all("<MouseWheel>")
+
+        canvas.bind('<Enter>', _bind_to_mousewheel)
+        canvas.bind('<Leave>', _unbind_from_mousewheel)
+
+    def _create_info_section(self, parent):
+        """
+        Create responsive info section with model and OOP information
+
+        Both cards resize proportionally and stack vertically on small windows
+        """
+        # Create info section spanning both columns
+        left_card = self._create_card(parent, "📊 Model Information")
+        left_card.grid(row=1, column=0, sticky="nsew", padx=(20, 10), pady=(0, 20))
+
+        right_card = self._create_card(parent, "🎓 OOP Concepts Demonstrated")
+        right_card.grid(row=1, column=1, sticky="nsew", padx=(10, 20), pady=(0, 20))
+
+        # Model info content
         left_content = tk.Frame(left_card, bg=DarkTheme.BG_CARD)
         left_content.pack(fill="both", expand=True, padx=20, pady=15)
 
-        self.model_info_display = tk.Text(left_content, height=4, font=("Segoe UI", 10),
-                                         bg="#2b2b2b", fg=DarkTheme.TEXT_SECONDARY,
+        self.model_info_display = tk.Text(left_content, height=1, width=1,
+                                         font=("Segoe UI", 9),
+                                         bg=DarkTheme.BG_HOVER, fg=DarkTheme.TEXT_SECONDARY,
                                          relief="flat", padx=15, pady=12,
                                          insertbackground=DarkTheme.TEXT_PRIMARY,
-                                         wrap=tk.WORD)
+                                         wrap=tk.WORD, borderwidth=2,
+                                         highlightthickness=1,
+                                         highlightbackground=DarkTheme.BORDER,
+                                         highlightcolor=DarkTheme.PRIMARY)
         self.model_info_display.pack(fill="both", expand=True)
-        self.model_info_display.insert("1.0", "💡 Select a model to view information...")
+        self.model_info_display.insert("1.0", "💡 Click 'Load Model' to view model information...")
 
+        # OOP concepts content with scrollbar
         right_content = tk.Frame(right_card, bg=DarkTheme.BG_CARD)
         right_content.pack(fill="both", expand=True, padx=20, pady=15)
 
-        self.oop_info_display = tk.Text(right_content, height=4, font=("Segoe UI", 10),
-                                       bg="#2b2b2b", fg=DarkTheme.TEXT_SECONDARY,
+        # Create text widget with scrollbar
+        text_frame = tk.Frame(right_content, bg=DarkTheme.BG_CARD)
+        text_frame.pack(fill="both", expand=True)
+
+        oop_scrollbar = tk.Scrollbar(text_frame, bg=DarkTheme.BG_HOVER)
+        oop_scrollbar.pack(side="right", fill="y")
+
+        self.oop_info_display = tk.Text(text_frame, height=1, width=1,
+                                       font=("Segoe UI", 9),
+                                       bg=DarkTheme.BG_HOVER, fg=DarkTheme.TEXT_SECONDARY,
                                        relief="flat", padx=15, pady=12,
                                        insertbackground=DarkTheme.TEXT_PRIMARY,
-                                       wrap=tk.WORD)
-        self.oop_info_display.pack(fill="both", expand=True)
+                                       wrap=tk.WORD, borderwidth=2,
+                                       highlightthickness=1,
+                                       highlightbackground=DarkTheme.BORDER,
+                                       highlightcolor=DarkTheme.PRIMARY,
+                                       yscrollcommand=oop_scrollbar.set)
+        self.oop_info_display.pack(side="left", fill="both", expand=True)
+        oop_scrollbar.config(command=self.oop_info_display.yview)
 
-        oop_text = """✓ Multiple Inheritance: Line 174
-✓ Encapsulation: Private attributes
-✓ Polymorphism: predict() method
-✓ Method Overriding: load_model()
-✓ Multiple Decorators: @timer @log_execution"""
+        oop_text = """✅ Multiple Inheritance
+   📍 Location: main.py, Line 176
+   💡 Implementation: class AIGUIApplication(tk.Tk, ModelManagerMixin)
+   📝 Inherits from both tk.Tk and ModelManagerMixin
+
+✅ Multiple Decorators
+   📍 Location: main.py, Lines 161-162, 489-490
+   💡 Implementation: @timer and @log_execution stacked
+   📝 Applied on load_model_async() and _load_selected_model()
+
+✅ Encapsulation
+   📍 Location: Throughout all files (model_base.py, main.py)
+   💡 Implementation: Private attributes (_model_name, _loaded)
+   📝 Property decorators (@property) for controlled access
+
+✅ Polymorphism
+   📍 Location: model_base.py (Line 99), text_to_video.py (Line 106), image_classifier.py (Line 84)
+   💡 Implementation: predict() method in base and subclasses
+   📝 Same method name, different behavior per model type
+
+✅ Method Overriding
+   📍 Location: text_to_video.py (Line 63), image_classifier.py (Line 54)
+   💡 Implementation: load_model() and predict() overridden
+   📝 Subclasses provide specialized implementations"""
         self.oop_info_display.insert("1.0", oop_text)
+
+    def _on_window_resize(self, event):
+        """
+        Handle window resize events for responsive design
+
+        Adjusts UI elements based on window size
+        """
+        # Only handle resize events for the main window
+        if event.widget == self:
+            new_width = event.width
+            new_height = event.height
+
+            # Prevent excessive updates
+            if abs(new_width - self._current_width) > 50 or abs(new_height - self._current_height) > 50:
+                self._current_width = new_width
+                self._current_height = new_height
+                # Force update of layout
+                self.update_idletasks()
 
     @error_handler(default_return=None)
     def _toggle_input_type(self):
@@ -461,7 +606,15 @@ class AIGUIApplication(tk.Tk, ModelManagerMixin):
             filetypes=[("Images", "*.jpg *.jpeg *.png *.bmp"), ("All", "*.*")])
         if file_path:
             self._selected_image_path = file_path
-            self.image_path_label.config(text=f"Selected: {os.path.basename(file_path)}")
+            filename = os.path.basename(file_path)
+            # Truncate long filenames
+            if len(filename) > 35:
+                filename = filename[:32] + "..."
+            self.image_path_label.config(
+                text=f"✓ Selected: {filename}",
+                fg=DarkTheme.SUCCESS,
+                font=("Segoe UI", 9, "normal")
+            )
             self._input_type.set("Image")
             self._toggle_input_type()
 
@@ -634,15 +787,40 @@ class AIGUIApplication(tk.Tk, ModelManagerMixin):
         self.image_display_label.image = photo
 
     def _clear_all(self):
-        """Clear all"""
+        """
+        Reset all inputs and outputs to default state
+
+        Clears text, images, and resets UI to initial state
+        """
+        # Reset text input
         self.text_input.delete("1.0", tk.END)
         self.text_input.insert("1.0", "A beautiful sunset over the ocean with waves")
+
+        # Clear output display
         self.output_display.delete("1.0", tk.END)
+
+        # Reset state variables
         self._selected_image_path = None
         self._generated_image = None
-        self.image_path_label.config(text="")
-        self.image_display_label.configure(image="", text="Video preview will appear here")
+
+        # Reset UI labels with icons
+        self.image_path_label.config(
+            text="No image selected",
+            fg=DarkTheme.TEXT_SECONDARY,
+            font=("Segoe UI", 9, "italic")
+        )
+        self.image_display_label.configure(
+            image="",
+            text="🎬 Video preview will appear here\n\nRun a model to see results"
+        )
         self.image_display_label.image = None
+
+        # Reset progress
+        self.progress_bar['value'] = 0
+        self.progress_label.config(
+            text="⚡ Ready to generate",
+            fg=DarkTheme.SUCCESS
+        )
 
     def _show_about(self):
         """Show about"""
